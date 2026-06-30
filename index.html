@@ -351,12 +351,14 @@ body {
     <div class="monster-card op">
       <div class="m-label">相手</div>
       <div class="m-name" id="op-monster-name">?</div>
+      <div class="m-total" id="op-monster-base"></div>
       <div class="m-total" id="op-monster-total"></div>
     </div>
     <div class="vs-label">VS</div>
     <div class="monster-card me">
       <div class="m-label">自分</div>
       <div class="m-name" id="my-monster-name">?</div>
+      <div class="m-total" id="my-monster-base"></div>
       <div class="m-total" id="my-monster-total"></div>
     </div>
   </div>
@@ -615,6 +617,8 @@ function startSummonPhase() {
   $('phase-label').textContent = 'サモンフェーズ';
   $('op-monster-name').textContent = '?';
   $('my-monster-name').textContent = '?';
+  $('op-monster-base').textContent = '';
+  $('my-monster-base').textContent = '';
   $('op-monster-total').textContent = '';
   $('my-monster-total').textContent = '';
 
@@ -652,6 +656,7 @@ function selectMonster(m) {
   document.querySelector(`.monster-btn[data-id="${m.id}"]`).classList.add('selected');
   myMonster = m;
   $('my-monster-name').textContent = m.name;
+  $('my-monster-base').textContent = `基礎値 ${m.value}`;
   const btn = $('btn-confirm-summon');
   if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
 }
@@ -680,6 +685,8 @@ function confirmMonster() {
 function checkBothMonsters() {
   if (!myMonster || !opMonster) return;
   $('op-monster-name').textContent = opMonster.name;
+  $('op-monster-base').textContent = `基礎値 ${opMonster.value}`;
+  $('my-monster-base').textContent = `基礎値 ${myMonster.value}`;
   setTimeout(() => startSpellPhase(), 500);
 }
 
