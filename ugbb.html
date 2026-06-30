@@ -322,12 +322,64 @@ body {
 </head>
 <body>
 
+<!-- ===== RULES MODAL ===== -->
+<div id="rules-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100;overflow-y:auto;padding:20px 16px;">
+  <div style="max-width:480px;margin:0 auto;background:#1a1a1a;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:24px 20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div style="font-size:20px;font-weight:900;color:#ff4444;letter-spacing:2px;">UGBB ルール</div>
+      <button onclick="closeRules()" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:24px;cursor:pointer;line-height:1;">×</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;font-size:13px;line-height:1.7;color:rgba(255,255,255,0.75);">
+      <section>
+        <div style="font-size:11px;letter-spacing:2px;color:#ff4444;margin-bottom:6px;">OBJECTIVE</div>
+        <div>3ラウンド先取で勝利。最大5ラウンド。</div>
+      </section>
+      <section>
+        <div style="font-size:11px;letter-spacing:2px;color:#ff4444;margin-bottom:6px;">MONSTERS</div>
+        <div>両者とも同じ5体を1枚ずつ保有。一度出したモンスターは消費される。</div>
+        <div style="margin-top:6px;display:flex;flex-direction:column;gap:3px;">
+          <div>スライム　<span style="color:rgba(255,200,50,0.8)">基礎値 1</span></div>
+          <div>オーク　　<span style="color:rgba(255,200,50,0.8)">基礎値 5</span></div>
+          <div>ゴーレム　<span style="color:rgba(255,200,50,0.8)">基礎値 9</span></div>
+          <div>ヴァンパイア <span style="color:rgba(255,200,50,0.8)">基礎値 13</span></div>
+          <div>ドラゴン　<span style="color:rgba(255,200,50,0.8)">基礎値 17</span></div>
+        </div>
+      </section>
+      <section>
+        <div style="font-size:11px;letter-spacing:2px;color:#ff4444;margin-bottom:6px;">SPELL CARDS</div>
+        <div>山札20枚・初期手札3枚。使ったカードは捨て札へ。</div>
+        <div style="margin-top:6px;display:flex;flex-direction:column;gap:3px;">
+          <div>爪研ぎ　　<span style="color:rgba(255,200,50,0.8)">2マナ → +3</span>　×10枚</div>
+          <div>ドーピング <span style="color:rgba(255,200,50,0.8)">3マナ → +6</span>　×7枚</div>
+          <div>血の契約　<span style="color:rgba(255,200,50,0.8)">5マナ → +15</span>　×3枚</div>
+        </div>
+      </section>
+      <section>
+        <div style="font-size:11px;letter-spacing:2px;color:#ff4444;margin-bottom:6px;">MANA</div>
+        <div>ラウンド1は5マナからスタート。毎ラウンド2増加（5→7→9→11→13）。未使用マナは持ち越せない。</div>
+        <div style="margin-top:4px;">ドロー：<span style="color:rgba(255,200,50,0.8)">2マナで1枚引く</span></div>
+      </section>
+      <section>
+        <div style="font-size:11px;letter-spacing:2px;color:#ff4444;margin-bottom:6px;">FLOW</div>
+        <div><span style="color:#e8e8e8;font-weight:bold;">① サモンフェーズ</span>　モンスターを同時に選択・公開</div>
+        <div><span style="color:#e8e8e8;font-weight:bold;">② スペルフェーズ</span>　マナを使って強化カードを使用またはドロー（相手には見えない）</div>
+        <div><span style="color:#e8e8e8;font-weight:bold;">③ バトルフェーズ</span>　行動を公開し合計値を比較。高い方が勝ちポイント獲得</div>
+      </section>
+      <section>
+        <div style="font-size:11px;letter-spacing:2px;color:#ff4444;margin-bottom:6px;">DRAW</div>
+        <div>引き分けの場合は同じモンスターのままマナのみリセットして再スペルフェーズ。</div>
+      </section>
+    </div>
+  </div>
+</div>
+
 <!-- ===== TITLE ===== -->
 <div id="screen-title" class="screen active">
   <div class="title-logo">UGBB</div>
   <div class="title-sub">Underground Beast Bet</div>
   <button class="btn-main btn-host" onclick="clickHost()">ホストになる</button>
   <button class="btn-main btn-ghost" onclick="clickJoin()">参加する</button>
+  <button class="btn-main" onclick="openRules()" style="background:none;border:1px solid rgba(255,68,68,0.3);color:rgba(255,255,255,0.5);font-size:14px;padding:10px;">ルール確認</button>
 </div>
 
 <!-- ===== LOBBY ===== -->
@@ -465,6 +517,8 @@ function shuffle(arr) {
   return a;
 }
 function genCode() { return String(Math.floor(1000 + Math.random() * 9000)); }
+function openRules()  { $('rules-modal').style.display = 'block'; }
+function closeRules() { $('rules-modal').style.display = 'none'; }
 function $(id) { return document.getElementById(id); }
 
 // =========================================
