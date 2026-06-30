@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>UGBB - Underground Beast Bet</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  background: #111;
+  min-height: 100vh;
+  font-family: 'Hiragino Sans', 'Meiryo', 'Yu Gothic', sans-serif;
+  color: #e8e8e8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  overflow-x: hidden;
+}
+
+/* ===== SCREENS ===== */
+.screen {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+  padding: 20px 16px;
+  gap: 14px;
+}
+.screen.active { display: flex; }
+
+/* ===== TITLE ===== */
+#screen-title { justify-content: center; gap: 24px; }
+.title-logo {
+  font-size: 52px;
+  font-weight: 900;
+  letter-spacing: 6px;
+  color: #ff4444;
+  text-shadow: 0 0 40px rgba(255,68,68,0.6);
+}
+.title-sub { font-size: 12px; color: rgba(255,255,255,0.35); letter-spacing: 3px; }
+.btn-main {
+  width: 100%;
+  max-width: 280px;
+  padding: 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-main:active { opacity: 0.75; }
+.btn-host { background: linear-gradient(135deg, #ff4444, #cc0000); color: #fff; }
+.btn-ghost { background: rgba(255,255,255,0.08); color: #e8e8e8; border: 1px solid rgba(255,255,255,0.2); }
+
+/* ===== LOBBY ===== */
+#screen-lobby { justify-content: center; gap: 20px; text-align: center; }
+.room-code-box {
+  font-size: 56px;
+  font-weight: 900;
+  letter-spacing: 10px;
+  color: #ff4444;
+  text-shadow: 0 0 20px rgba(255,68,68,0.5);
+  padding: 20px 30px;
+  border: 2px solid rgba(255,68,68,0.3);
+  border-radius: 12px;
+  background: rgba(255,68,68,0.05);
+}
+.lobby-label { font-size: 12px; color: rgba(255,255,255,0.45); letter-spacing: 1px; }
+.code-input {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 32px;
+  font-weight: bold;
+  letter-spacing: 8px;
+  text-align: center;
+  padding: 12px 20px;
+  width: 200px;
+  outline: none;
+}
+.waiting-text {
+  font-size: 13px;
+  color: rgba(255,255,255,0.35);
+  animation: blink 1.5s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:0.35} 50%{opacity:1} }
+
+/* ===== GAME ===== */
+#screen-game {
+  justify-content: flex-start;
+  padding: 12px;
+  gap: 8px;
+  min-height: 100vh;
+}
+
+/* Round tracker */
+.round-tracker { display: flex; gap: 8px; padding: 4px 0; }
+.round-dot {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.04);
+  transition: all 0.4s;
+}
+.round-dot.win  { background: #3399ff; border-color: #3399ff; box-shadow: 0 0 8px rgba(51,153,255,0.5); }
+.round-dot.lose { background: #ff4444; border-color: #ff4444; box-shadow: 0 0 8px rgba(255,68,68,0.5); }
+
+/* Phase label */
+.phase-label {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  align-self: flex-start;
+}
+
+/* Opponent info */
+.op-area {
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Battle area */
+.battle-area {
+  width: 100%;
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.monster-card {
+  flex: 1;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 14px 8px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 80px;
+}
+.monster-card.op  { border-color: rgba(255,68,68,0.25); }
+.monster-card.me  { border-color: rgba(51,153,255,0.25); }
+.m-label  { font-size: 10px; color: rgba(255,255,255,0.35); }
+.m-name   { font-size: 18px; font-weight: bold; }
+.m-total  { font-size: 12px; color: rgba(255,200,50,0.8); margin-top: 2px; }
+.vs-label { font-size: 13px; font-weight: bold; color: rgba(255,255,255,0.25); align-self: center; }
+
+/* Deck info */
+.deck-info { font-size: 11px; color: rgba(255,255,255,0.35); align-self: flex-start; }
+
+/* Mana bar */
+.mana-bar { width: 100%; display: flex; flex-direction: column; gap: 4px; }
+.mana-pips { display: flex; gap: 3px; flex-wrap: wrap; }
+.mana-pip {
+  width: 18px; height: 18px;
+  border-radius: 3px;
+  background: rgba(255,200,50,0.12);
+  border: 1px solid rgba(255,200,50,0.2);
+  transition: all 0.2s;
+}
+.mana-pip.filled { background: rgba(255,200,50,0.75); border-color: #ffc832; box-shadow: 0 0 5px rgba(255,200,50,0.3); }
+.mana-text { font-size: 11px; color: rgba(255,255,255,0.4); }
+
+.divider { width: 100%; height: 1px; background: rgba(255,255,255,0.06); }
+
+/* ===== SUMMON PHASE ===== */
+.monster-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+.monster-btn {
+  background: rgba(255,255,255,0.05);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  color: #e8e8e8;
+  padding: 12px 6px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.monster-btn:active { opacity: 0.7; }
+.monster-btn.selected { border-color: #3399ff; background: rgba(51,153,255,0.12); }
+.monster-btn.used { opacity: 0.25; pointer-events: none; }
+.mb-name  { font-weight: bold; font-size: 14px; }
+.mb-value { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+
+/* ===== SPELL PHASE ===== */
+.btn-draw {
+  width: 100%;
+  padding: 13px;
+  background: rgba(255,200,50,0.08);
+  border: 1px solid rgba(255,200,50,0.25);
+  border-radius: 8px;
+  color: #ffc832;
+  font-size: 15px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-draw:active { opacity: 0.7; }
+.btn-draw:disabled { opacity: 0.3; pointer-events: none; }
+
+.hand-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+  justify-content: center;
+}
+.hand-card {
+  background: rgba(255,255,255,0.06);
+  border: 2px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 8px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-width: 78px;
+}
+.hand-card:active { opacity: 0.7; }
+.hand-card.selected { border-color: #ffc832; background: rgba(255,200,50,0.1); }
+.hand-card.cant-afford { opacity: 0.3; pointer-events: none; }
+.hc-name  { font-size: 12px; font-weight: bold; }
+.hc-cost  { font-size: 11px; color: rgba(255,200,50,0.8); margin-top: 2px; }
+.hc-boost { font-size: 11px; color: rgba(100,220,100,0.8); }
+
+.btn-confirm {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #ff4444, #cc0000);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 17px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-confirm:active { opacity: 0.75; }
+
+.waiting-overlay {
+  width: 100%;
+  padding: 20px;
+  text-align: center;
+  color: rgba(255,255,255,0.35);
+  font-size: 13px;
+  animation: blink 1.5s ease-in-out infinite;
+}
+
+/* ===== BATTLE PHASE ===== */
+.action-log {
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.log-title { font-size: 10px; color: rgba(255,255,255,0.35); letter-spacing: 1px; margin-bottom: 6px; }
+.action-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 13px;
+}
+.act-cost  { color: rgba(255,200,50,0.7); font-size: 11px; min-width: 40px; }
+.act-draw  { color: #88aaff; }
+.act-spell { color: #88dd88; }
+
+.battle-result {
+  width: 100%;
+  text-align: center;
+  padding: 18px;
+  border-radius: 12px;
+}
+.result-win  { background: rgba(51,153,255,0.08); border: 2px solid rgba(51,153,255,0.35); }
+.result-lose { background: rgba(255,68,68,0.08);  border: 2px solid rgba(255,68,68,0.35);  }
+.result-draw { background: rgba(128,128,128,0.08); border: 2px solid rgba(128,128,128,0.3); }
+.result-title  { font-size: 30px; font-weight: 900; margin-bottom: 6px; }
+.result-detail { font-size: 13px; color: rgba(255,255,255,0.5); }
+
+.btn-next {
+  width: 100%;
+  padding: 14px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-next:active { opacity: 0.7; }
+.btn-next:disabled { opacity: 0.4; }
+
+/* ===== GAMEOVER ===== */
+#screen-gameover { justify-content: center; gap: 20px; text-align: center; }
+.go-title { font-size: 52px; font-weight: 900; letter-spacing: 4px; }
+.go-title.win  { color: #3399ff; text-shadow: 0 0 40px rgba(51,153,255,0.6); }
+.go-title.lose { color: #ff4444; text-shadow: 0 0 40px rgba(255,68,68,0.6); }
+.go-score { font-size: 18px; color: rgba(255,255,255,0.5); }
+</style>
+</head>
+<body>
+
+<!-- ===== TITLE ===== -->
+<div id="screen-title" class="screen active">
+  <div class="title-logo">UGBB</div>
+  <div class="title-sub">Underground Beast Bet</div>
+  <button class="btn-main btn-host" onclick="clickHost()">ホストになる</button>
+  <button class="btn-main btn-ghost" onclick="clickJoin()">参加する</button>
+</div>
+
+<!-- ===== LOBBY ===== -->
+<div id="screen-lobby" class="screen">
+  <div class="title-logo" style="font-size:30px;margin-bottom:8px">UGBB</div>
+  <div id="lobby-inner" style="display:flex;flex-direction:column;align-items:center;gap:16px;width:100%"></div>
+</div>
+
+<!-- ===== GAME ===== -->
+<div id="screen-game" class="screen">
+  <div class="round-tracker" id="round-tracker"></div>
+  <div class="phase-label" id="phase-label">-</div>
+
+  <div class="op-area" id="op-area">
+    <span id="op-hand-info">相手の手札: 3枚</span>
+    <span id="op-used-info"></span>
+    <span id="op-discard-info"></span>
+  </div>
+
+  <div class="battle-area">
+    <div class="monster-card op">
+      <div class="m-label">相手</div>
+      <div class="m-name" id="op-monster-name">?</div>
+      <div class="m-total" id="op-monster-total"></div>
+    </div>
+    <div class="vs-label">VS</div>
+    <div class="monster-card me">
+      <div class="m-label">自分</div>
+      <div class="m-name" id="my-monster-name">?</div>
+      <div class="m-total" id="my-monster-total"></div>
+    </div>
+  </div>
+
+  <div class="deck-info" id="deck-info">手札: 3枚 ／ 山札: 17枚</div>
+
+  <div class="mana-bar">
+    <div class="mana-pips" id="mana-pips"></div>
+    <div class="mana-text" id="mana-text">マナ 5 / 5</div>
+  </div>
+
+  <div class="divider"></div>
+  <div id="phase-content" style="width:100%;display:flex;flex-direction:column;gap:8px;"></div>
+</div>
+
+<!-- ===== GAMEOVER ===== -->
+<div id="screen-gameover" class="screen">
+  <div class="go-title" id="go-title">WIN</div>
+  <div class="go-score" id="go-score"></div>
+  <button class="btn-main btn-ghost" onclick="location.reload()" style="margin-top:16px">タイトルに戻る</button>
+</div>
+
+<script>
+// =========================================
+// CONSTANTS
+// =========================================
+const SUPABASE_URL = 'https://dchxyzxcbouqhtyxrojg.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Fll10HbQox-Ewe4_xUaxbw_iCLKZ8Y6';
+
+const MONSTERS = [
+  { id: 'slime',   name: 'スライム',     value: 1  },
+  { id: 'orc',     name: 'オーク',       value: 5  },
+  { id: 'golem',   name: 'ゴーレム',     value: 9  },
+  { id: 'vampire', name: 'ヴァンパイア',  value: 13 },
+  { id: 'dragon',  name: 'ドラゴン',     value: 17 },
+];
+
+const CARD_TSUME = { name: '爪研ぎ',    cost: 2, boost: 3  };
+const CARD_DOPE  = { name: 'ドーピング', cost: 3, boost: 6  };
+const CARD_BLOOD = { name: '血の契約',  cost: 5, boost: 15 };
+
+function makeDeck() {
+  const d = [
+    ...Array(10).fill(null).map(() => ({...CARD_TSUME})),
+    ...Array(7).fill(null).map(()  => ({...CARD_DOPE})),
+    ...Array(3).fill(null).map(()  => ({...CARD_BLOOD})),
+  ];
+  return shuffle(d);
+}
+
+const INIT_MANA    = 5;
+const MANA_INC     = 2;
+const DRAW_COST    = 2;
+const INIT_HAND    = 3;
+const WIN_PTS      = 3;
+
+// =========================================
+// STATE
+// =========================================
+let isHost = false;
+let roomCode = '';
+let sbClient = null;
+let chan = null;
+
+// Game state
+let myMonsters = [];
+let myHand = [];
+let myDeck = [];
+let myDiscard = [];
+
+let opHandSize = INIT_HAND;
+let opDiscard = [];
+let opUsedMonsterIds = [];
+
+let myPts = 0;
+let opPts = 0;
+let decidedResults = [];   // 'win' | 'lose'
+let lastWasDraw = false;
+
+let curRound = 1;
+let maxMana = INIT_MANA;
+let curMana = INIT_MANA;
+
+// Current battle
+let myMonster = null;
+let opMonster = null;
+let myActions = [];   // {type:'draw'|'spell', card?, manaCost, _idx?}
+let myConfirmed = false;
+let opSpellData = null;
+let myNextReady = false;
+let opNextReady = false;
+
+let phase = 'lobby';
+
+// =========================================
+// UTILS
+// =========================================
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function genCode() { return String(Math.floor(1000 + Math.random() * 9000)); }
+function $(id) { return document.getElementById(id); }
+
+// =========================================
+// SUPABASE
+// =========================================
+function initSB() {
+  return new Promise((resolve, reject) => {
+    if (sbClient) { resolve(); return; }
+    if (window.supabase) {
+      sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      resolve(); return;
+    }
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
+    s.onload = () => { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); resolve(); };
+    s.onerror = () => reject(new Error('Supabase読み込み失敗'));
+    document.head.appendChild(s);
+  });
+}
+
+function joinChan(code, host) {
+  if (chan) chan.unsubscribe();
+  chan = sbClient.channel('ugbb:' + code, { config: { broadcast: { self: false } } });
+
+  chan
+    .on('broadcast', { event: 'ready' }, () => {
+      if (host) { send('start', {}); startGame(); }
+    })
+    .on('broadcast', { event: 'start' }, () => {
+      if (!isHost) startGame();
+    })
+    .on('broadcast', { event: 'monster_select' }, ({ payload }) => {
+      opMonster = MONSTERS.find(m => m.id === payload.id);
+      opUsedMonsterIds.push(payload.id);
+      checkBothMonsters();
+    })
+    .on('broadcast', { event: 'spell_confirm' }, ({ payload }) => {
+      opSpellData = payload;
+      opHandSize = payload.handSizeAfter;
+      opDiscard = [...opDiscard, ...payload.discards];
+      checkBothSpells();
+    })
+    .on('broadcast', { event: 'next_ready' }, () => {
+      opNextReady = true;
+      checkBothNext();
+    })
+    .subscribe(status => {
+      if (status === 'SUBSCRIBED' && !host) {
+        send('ready', {});
+        setLobbyMsg('ホストの開始を待っています...');
+      }
+    });
+}
+
+function send(event, payload) {
+  chan.send({ type: 'broadcast', event, payload });
+}
+
+// =========================================
+// SCREENS
+// =========================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(id).classList.add('active');
+}
+
+// =========================================
+// LOBBY
+// =========================================
+async function clickHost() {
+  await initSB();
+  isHost = true;
+  roomCode = genCode();
+  showScreen('screen-lobby');
+  $('lobby-inner').innerHTML = `
+    <div class="lobby-label">ルームコード</div>
+    <div class="room-code-box">${roomCode}</div>
+    <div class="waiting-text" id="lobby-msg">相手の参加を待っています...</div>
+  `;
+  joinChan(roomCode, true);
+}
+
+async function clickJoin() {
+  showScreen('screen-lobby');
+  $('lobby-inner').innerHTML = `
+    <div class="lobby-label">ルームコードを入力</div>
+    <input class="code-input" id="code-input" type="number" placeholder="0000">
+    <button class="btn-main btn-host" onclick="doJoin()">参加する</button>
+    <div class="waiting-text" id="lobby-msg" style="display:none"></div>
+  `;
+}
+
+async function doJoin() {
+  const code = String($('code-input').value).trim();
+  if (code.length !== 4) { alert('4桁のコードを入力してください'); return; }
+  await initSB();
+  isHost = false;
+  roomCode = code;
+  $('lobby-msg').style.display = 'block';
+  $('lobby-msg').textContent = '接続中...';
+  joinChan(code, false);
+}
+
+function setLobbyMsg(msg) {
+  const el = $('lobby-msg');
+  if (el) el.textContent = msg;
+}
+
+// =========================================
+// GAME START
+// =========================================
+function startGame() {
+  myMonsters   = [...MONSTERS];
+  myDeck       = makeDeck();
+  myHand       = [];
+  myDiscard    = [];
+  opHandSize   = INIT_HAND;
+  opDiscard    = [];
+  opUsedMonsterIds = [];
+  myPts        = 0;
+  opPts        = 0;
+  decidedResults = [];
+  lastWasDraw  = false;
+  curRound     = 1;
+  maxMana      = INIT_MANA;
+
+  for (let i = 0; i < INIT_HAND; i++) drawCard();
+
+  showScreen('screen-game');
+  renderRoundTracker();
+  startSummonPhase();
+}
+
+function drawCard() {
+  if (myDeck.length === 0) return null;
+  const c = myDeck.pop();
+  myHand.push(c);
+  return c;
+}
+
+// =========================================
+// SUMMON PHASE
+// =========================================
+function startSummonPhase() {
+  phase = 'summon';
+  myMonster = null;
+  opMonster = null;
+  myConfirmed = false;
+
+  $('phase-label').textContent = 'サモンフェーズ';
+  $('op-monster-name').textContent = '?';
+  $('my-monster-name').textContent = '?';
+  $('op-monster-total').textContent = '';
+  $('my-monster-total').textContent = '';
+
+  updateOpInfo();
+  updateDeckInfo();
+  updateMana();
+
+  const grid = document.createElement('div');
+  grid.className = 'monster-grid';
+  myMonsters.forEach(m => {
+    const btn = document.createElement('button');
+    btn.className = 'monster-btn';
+    btn.dataset.id = m.id;
+    btn.innerHTML = `<div class="mb-name">${m.name}</div><div class="mb-value">攻撃力 ${m.value}</div>`;
+    btn.onclick = () => selectMonster(m);
+    grid.appendChild(btn);
+  });
+
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'btn-confirm';
+  confirmBtn.id = 'btn-confirm-summon';
+  confirmBtn.textContent = '確定';
+  confirmBtn.disabled = true;
+  confirmBtn.style.opacity = '0.4';
+  confirmBtn.onclick = confirmMonster;
+
+  const pc = $('phase-content');
+  pc.innerHTML = '';
+  pc.appendChild(grid);
+  pc.appendChild(confirmBtn);
+}
+
+function selectMonster(m) {
+  document.querySelectorAll('.monster-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelector(`.monster-btn[data-id="${m.id}"]`).classList.add('selected');
+  myMonster = m;
+  $('my-monster-name').textContent = m.name;
+  const btn = $('btn-confirm-summon');
+  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+}
+
+function confirmMonster() {
+  if (!myMonster) return;
+  myConfirmed = true;
+  myMonsters = myMonsters.filter(m => m.id !== myMonster.id);
+
+  document.querySelectorAll('.monster-btn').forEach(b => b.style.pointerEvents = 'none');
+  const btn = $('btn-confirm-summon');
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.4'; }
+
+  send('monster_select', { id: myMonster.id });
+
+  if (!opMonster) {
+    const wait = document.createElement('div');
+    wait.className = 'waiting-overlay';
+    wait.textContent = '相手のモンスター選択を待っています...';
+    $('phase-content').appendChild(wait);
+  } else {
+    checkBothMonsters();
+  }
+}
+
+function checkBothMonsters() {
+  if (!myMonster || !opMonster) return;
+  $('op-monster-name').textContent = opMonster.name;
+  setTimeout(() => startSpellPhase(), 500);
+}
+
+// =========================================
+// SPELL PHASE
+// =========================================
+function startSpellPhase() {
+  phase = 'spell';
+  myActions = [];
+  myConfirmed = false;
+  opSpellData = null;
+  curMana = maxMana;
+
+  $('phase-label').textContent = 'スペルフェーズ';
+  updateMana();
+  updateDeckInfo();
+  renderSpellPhase();
+}
+
+function renderSpellPhase() {
+  const pc = $('phase-content');
+  pc.innerHTML = '';
+
+  const drawBtn = document.createElement('button');
+  drawBtn.className = 'btn-draw';
+  drawBtn.id = 'btn-draw';
+  drawBtn.innerHTML = `ドロー <span style="font-size:12px;opacity:0.6">(${DRAW_COST}マナ)</span>`;
+  drawBtn.disabled = curMana < DRAW_COST || myDeck.length === 0;
+  drawBtn.onclick = doDrawAction;
+  pc.appendChild(drawBtn);
+
+  const handDiv = document.createElement('div');
+  handDiv.className = 'hand-display';
+  handDiv.id = 'hand-display';
+  renderHand(handDiv);
+  pc.appendChild(handDiv);
+
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'btn-confirm';
+  confirmBtn.id = 'btn-confirm-spell';
+  confirmBtn.textContent = '確定';
+  confirmBtn.onclick = confirmSpell;
+  pc.appendChild(confirmBtn);
+}
+
+function renderHand(container) {
+  if (!container) container = $('hand-display');
+  if (!container) return;
+  const usedIdxs = myActions.filter(a => a.type === 'spell').map(a => a._idx);
+  container.innerHTML = '';
+  myHand.forEach((card, i) => {
+    const div = document.createElement('div');
+    div.className = 'hand-card';
+    const isUsed = usedIdxs.includes(i);
+    if (isUsed) {
+      div.classList.add('selected');
+    } else if (card.cost > curMana) {
+      div.classList.add('cant-afford');
+    }
+    div.innerHTML = `
+      <div class="hc-name">${card.name}</div>
+      <div class="hc-cost">${card.cost}マナ</div>
+      <div class="hc-boost">+${card.boost}</div>
+    `;
+    div.onclick = () => toggleCard(i, card);
+    container.appendChild(div);
+  });
+}
+
+function toggleCard(idx, card) {
+  const alreadyUsed = myActions.find(a => a.type === 'spell' && a._idx === idx);
+  if (alreadyUsed) {
+    myActions = myActions.filter(a => !(a.type === 'spell' && a._idx === idx));
+    curMana += card.cost;
+  } else {
+    if (card.cost > curMana) return;
+    myActions.push({ type: 'spell', card: {...card}, manaCost: card.cost, _idx: idx });
+    curMana -= card.cost;
+  }
+  updateMana();
+  renderHand();
+  const d = $('btn-draw');
+  if (d) d.disabled = curMana < DRAW_COST || myDeck.length === 0;
+}
+
+function doDrawAction() {
+  if (curMana < DRAW_COST || myDeck.length === 0) return;
+  curMana -= DRAW_COST;
+  drawCard();
+  myActions.push({ type: 'draw', manaCost: DRAW_COST });
+  updateMana();
+  updateDeckInfo();
+  renderHand();
+  const d = $('btn-draw');
+  if (d) d.disabled = curMana < DRAW_COST || myDeck.length === 0;
+}
+
+function confirmSpell() {
+  myConfirmed = true;
+
+  const usedSpells = myActions.filter(a => a.type === 'spell');
+  const totalBoost = usedSpells.reduce((s, a) => s + a.card.boost, 0);
+  const discards   = usedSpells.map(a => a.card);
+  const usedIdxs   = usedSpells.map(a => a._idx);
+
+  myDiscard = [...myDiscard, ...discards];
+  myHand = myHand.filter((_, i) => !usedIdxs.includes(i));
+
+  const cleanActions = myActions.map(a => ({
+    type: a.type,
+    card: a.card || null,
+    manaCost: a.manaCost,
+  }));
+
+  send('spell_confirm', {
+    actions: cleanActions,
+    totalBoost,
+    handSizeAfter: myHand.length,
+    discards,
+  });
+
+  myActions = cleanActions;
+
+  const pc = $('phase-content');
+  pc.innerHTML = '<div class="waiting-overlay">相手の確定を待っています...</div>';
+
+  if (opSpellData) checkBothSpells();
+}
+
+function checkBothSpells() {
+  if (!myConfirmed || !opSpellData) return;
+  setTimeout(() => startBattlePhase(), 300);
+}
+
+// =========================================
+// BATTLE PHASE
+// =========================================
+function startBattlePhase() {
+  phase = 'battle';
+  $('phase-label').textContent = 'バトルフェーズ';
+
+  const myBoost = myActions.filter(a => a.type === 'spell').reduce((s, a) => s + a.card.boost, 0);
+  const opBoost = opSpellData.totalBoost;
+  const myTotal = myMonster.value + myBoost;
+  const opTotal = opMonster.value + opBoost;
+
+  $('my-monster-name').textContent = myMonster.name;
+  $('op-monster-name').textContent = opMonster.name;
+  $('my-monster-total').textContent = `合計 ${myTotal}`;
+  $('op-monster-total').textContent = `合計 ${opTotal}`;
+
+  let result;
+  if (myTotal > opTotal)      result = 'win';
+  else if (myTotal < opTotal) result = 'lose';
+  else                        result = 'draw';
+
+  // Award points & track
+  if (result === 'win')  { myPts++; decidedResults.push('win');  lastWasDraw = false; }
+  else if (result === 'lose') { opPts++; decidedResults.push('lose'); lastWasDraw = false; }
+  else                   { lastWasDraw = true; }
+
+  // Consume monsters (only if not draw)
+  if (result !== 'draw') {
+    myDiscard.push(myMonster);
+  }
+
+  renderRoundTracker();
+
+  const pc = $('phase-content');
+  pc.innerHTML = '';
+
+  // Opponent action log
+  const opLog = buildLog('相手のアクション', opSpellData.actions);
+  pc.appendChild(opLog);
+
+  // My action log
+  const myLog = buildLog('自分のアクション', myActions);
+  pc.appendChild(myLog);
+
+  // Result
+  const resDiv = document.createElement('div');
+  resDiv.className = 'battle-result';
+  if (result === 'win') {
+    resDiv.classList.add('result-win');
+    resDiv.innerHTML = `<div class="result-title" style="color:#3399ff">WIN</div><div class="result-detail">${myTotal} vs ${opTotal}</div>`;
+  } else if (result === 'lose') {
+    resDiv.classList.add('result-lose');
+    resDiv.innerHTML = `<div class="result-title" style="color:#ff4444">LOSE</div><div class="result-detail">${myTotal} vs ${opTotal}</div>`;
+  } else {
+    resDiv.classList.add('result-draw');
+    resDiv.innerHTML = `<div class="result-title" style="color:#888">DRAW</div><div class="result-detail">${myTotal} vs ${opTotal} — 再スペル</div>`;
+  }
+  pc.appendChild(resDiv);
+
+  updateOpInfo();
+  updateDeckInfo();
+
+  // Next button
+  myNextReady = false;
+  opNextReady = false;
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'btn-next';
+  nextBtn.id = 'btn-next';
+  nextBtn.textContent = '次へ';
+  nextBtn.onclick = clickNext;
+  pc.appendChild(nextBtn);
+}
+
+function buildLog(title, actions) {
+  const div = document.createElement('div');
+  div.className = 'action-log';
+  div.innerHTML = `<div class="log-title">${title}</div>`;
+  if (!actions || actions.length === 0) {
+    div.innerHTML += '<div style="font-size:12px;color:rgba(255,255,255,0.25)">アクションなし</div>';
+    return div;
+  }
+  actions.forEach(a => {
+    const item = document.createElement('div');
+    item.className = 'action-item';
+    if (a.type === 'draw') {
+      item.innerHTML = `<span class="act-cost">${a.manaCost}マナ</span><span class="act-draw">ドロー</span>`;
+    } else {
+      item.innerHTML = `<span class="act-cost">${a.manaCost}マナ</span><span class="act-spell">${a.card.name} <span style="color:rgba(255,255,255,0.4)">+${a.card.boost}</span></span>`;
+    }
+    div.appendChild(item);
+  });
+  return div;
+}
+
+function clickNext() {
+  myNextReady = true;
+  send('next_ready', {});
+  const btn = $('btn-next');
+  if (btn) { btn.disabled = true; btn.textContent = '相手を待っています...'; }
+  checkBothNext();
+}
+
+function checkBothNext() {
+  if (!myNextReady || !opNextReady) return;
+  if (lastWasDraw) {
+    // 再スペル: same monsters, mana resets
+    startSpellPhase();
+  } else {
+    if (myPts >= WIN_PTS || opPts >= WIN_PTS) { showGameOver(); return; }
+    curRound++;
+    maxMana += MANA_INC;
+    startSummonPhase();
+  }
+}
+
+// =========================================
+// GAME OVER
+// =========================================
+function showGameOver() {
+  const won = myPts >= WIN_PTS;
+  $('go-title').textContent = won ? 'WIN' : 'LOSE';
+  $('go-title').className = `go-title ${won ? 'win' : 'lose'}`;
+  $('go-score').textContent = `${myPts} — ${opPts}`;
+  showScreen('screen-gameover');
+}
+
+// =========================================
+// UI
+// =========================================
+function renderRoundTracker() {
+  const el = $('round-tracker');
+  el.innerHTML = '';
+  for (let i = 0; i < 5; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'round-dot';
+    if (decidedResults[i] === 'win')  dot.classList.add('win');
+    if (decidedResults[i] === 'lose') dot.classList.add('lose');
+    el.appendChild(dot);
+  }
+}
+
+function updateMana() {
+  const pips  = $('mana-pips');
+  const text  = $('mana-text');
+  if (!pips || !text) return;
+  pips.innerHTML = '';
+  for (let i = 0; i < maxMana; i++) {
+    const pip = document.createElement('div');
+    pip.className = 'mana-pip' + (i < curMana ? ' filled' : '');
+    pips.appendChild(pip);
+  }
+  text.textContent = `マナ ${curMana} / ${maxMana}`;
+}
+
+function updateOpInfo() {
+  $('op-hand-info').textContent = `相手の手札: ${opHandSize}枚`;
+
+  const usedNames = opUsedMonsterIds.map(id => MONSTERS.find(m => m.id === id)?.name).filter(Boolean);
+  $('op-used-info').textContent = usedNames.length ? `使用済: ${usedNames.join('・')}` : '';
+
+  if (opDiscard.length > 0) {
+    const cnt = {};
+    opDiscard.forEach(c => { cnt[c.name] = (cnt[c.name] || 0) + 1; });
+    $('op-discard-info').textContent = '捨て札: ' + Object.entries(cnt).map(([n,c]) => c > 1 ? `${n}×${c}` : n).join(' ');
+  } else {
+    $('op-discard-info').textContent = '';
+  }
+}
+
+function updateDeckInfo() {
+  $('deck-info').textContent = `手札: ${myHand.length}枚 ／ 山札: ${myDeck.length}枚`;
+}
+</script>
+</body>
+</html>
