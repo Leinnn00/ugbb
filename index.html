@@ -341,11 +341,11 @@ body {
         <div style="font-size:11px;letter-spacing:2px;color:#ff4444;margin-bottom:6px;">MONSTERS</div>
         <div>両者とも同じ5体を1枚ずつ保有。一度出したモンスターは消費される。</div>
         <div style="margin-top:6px;display:flex;flex-direction:column;gap:3px;">
-          <div>スライム　<span style="color:rgba(255,200,50,0.8)">基礎値 1</span></div>
-          <div>オーク　　<span style="color:rgba(255,200,50,0.8)">基礎値 5</span></div>
-          <div>ゴーレム　<span style="color:rgba(255,200,50,0.8)">基礎値 9</span></div>
-          <div>ヴァンパイア <span style="color:rgba(255,200,50,0.8)">基礎値 13</span></div>
-          <div>ドラゴン　<span style="color:rgba(255,200,50,0.8)">基礎値 17</span></div>
+          <div>スライム　<span style="color:rgba(255,200,50,0.8)">戦闘力 1</span></div>
+          <div>オーク　　<span style="color:rgba(255,200,50,0.8)">戦闘力 5</span></div>
+          <div>ゴーレム　<span style="color:rgba(255,200,50,0.8)">戦闘力 9</span></div>
+          <div>ヴァンパイア <span style="color:rgba(255,200,50,0.8)">戦闘力 13</span></div>
+          <div>ドラゴン　<span style="color:rgba(255,200,50,0.8)">戦闘力 17</span></div>
         </div>
       </section>
 
@@ -718,7 +718,7 @@ function selectMonster(m) {
   document.querySelector(`.monster-btn[data-id="${m.id}"]`).classList.add('selected');
   myMonster = m;
   $('my-monster-name').textContent = m.name;
-  $('my-monster-base').textContent = `基礎値 ${m.value}`;
+  $('my-monster-base').textContent = `戦闘力 ${m.value}`;
   const btn = $('btn-confirm-summon');
   if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
 }
@@ -745,10 +745,10 @@ function confirmMonster() {
 }
 
 function checkBothMonsters() {
-  if (!myMonster || !opMonster) return;
+  if (!myConfirmed || !opMonster) return;
   $('op-monster-name').textContent = opMonster.name;
-  $('op-monster-base').textContent = `基礎値 ${opMonster.value}`;
-  $('my-monster-base').textContent = `基礎値 ${myMonster.value}`;
+  $('op-monster-base').textContent = `戦闘力 ${opMonster.value}`;
+  $('my-monster-base').textContent = `戦闘力 ${myMonster.value}`;
   setTimeout(() => startSpellPhase(), 500);
 }
 
