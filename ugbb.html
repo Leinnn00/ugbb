@@ -667,6 +667,7 @@ function startSummonPhase() {
   myMonster = null;
   opMonster = null;
   myConfirmed = false;
+  opSpellData = null;
 
   $('phase-label').textContent = 'サモンフェーズ';
   $('op-monster-name').textContent = '?';
@@ -737,7 +738,7 @@ function confirmMonster() {
 }
 
 function checkBothMonsters() {
-  if (!myConfirmed || !opMonster) return;
+  if (phase !== 'summon' || !myConfirmed || !opMonster) return;
   $('op-monster-name').textContent = opMonster.name;
   $('op-monster-base').textContent = `戦闘力 ${opMonster.value}`;
   $('my-monster-base').textContent = `戦闘力 ${myMonster.value}`;
@@ -751,7 +752,6 @@ function startSpellPhase() {
   phase = 'spell';
   myActions = [];
   myConfirmed = false;
-  opSpellData = null;
   curMana = maxMana;
 
   $('phase-label').textContent = 'スペルフェーズ';
@@ -871,7 +871,9 @@ function confirmSpell() {
 }
 
 function checkBothSpells() {
-  if (!myConfirmed || !opSpellData) return;
+  if (phase !== 'spell' || !myConfirmed || !opSpellData) return;
+  myNextReady = false;
+  opNextReady = false;
   setTimeout(() => startBattlePhase(), 300);
 }
 
@@ -939,8 +941,6 @@ function startBattlePhase() {
   updateDeckInfo();
 
   // Next button
-  myNextReady = false;
-  opNextReady = false;
   const nextBtn = document.createElement('button');
   nextBtn.className = 'btn-next';
   nextBtn.id = 'btn-next';
@@ -979,9 +979,10 @@ function clickNext() {
 }
 
 function checkBothNext() {
-  if (!myNextReady || !opNextReady) return;
+  if (phase !== 'battle' || !myNextReady || !opNextReady) return;
   if (lastWasDraw) {
     // 再スペル: same monsters, mana resets
+    opSpellData = null;
     startSpellPhase();
   } else {
     if (myPts >= WIN_PTS || opPts >= WIN_PTS) { showGameOver(); return; }
